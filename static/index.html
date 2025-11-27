@@ -1,0 +1,508 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Library Management System</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+        }
+        .modal.active {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-blue-50 to-indigo-100 min-h-screen">
+    <div class="container mx-auto px-4 py-8 max-w-7xl">
+        <!-- Header -->
+        <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
+            <div class="flex justify-between items-center">
+                <div>
+                    <h1 class="text-3xl font-bold text-gray-800 mb-2">📚 Library Management System</h1>
+                    <p class="text-gray-600">Manage books, users, and transactions efficiently</p>
+                </div>
+                <div class="flex items-center gap-4">
+                    <span class="text-gray-700">👤 <span id="user-name" class="font-semibold"></span></span>
+                    <button onclick="logout()" class="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600">
+                        Logout
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tabs -->
+        <div class="bg-white rounded-lg shadow-lg mb-6">
+            <div class="flex border-b">
+                <button onclick="switchTab('books')" id="tab-books" class="tab-btn px-6 py-4 font-semibold border-b-2 border-blue-500 text-blue-600">
+                    📚 Books (<span id="books-count">0</span>)
+                </button>
+                <button onclick="switchTab('users')" id="tab-users" class="tab-btn px-6 py-4 font-semibold text-gray-600">
+                    👥 Users (<span id="users-count">0</span>)
+                </button>
+                <button onclick="switchTab('transactions')" id="tab-transactions" class="tab-btn px-6 py-4 font-semibold text-gray-600">
+                    🔄 Transactions (<span id="transactions-count">0</span>)
+                </button>
+            </div>
+
+            <div class="p-6">
+                <!-- Action Bar -->
+                <div class="flex justify-between items-center mb-6 gap-4 flex-wrap">
+                    <div class="relative flex-1 max-w-md" id="search-container">
+                        <input type="text" id="search-input" placeholder="Search..." 
+                            class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <span class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">🔍</span>
+                    </div>
+                    
+                    <div class="flex gap-3" id="action-buttons">
+                        <!-- Dynamic buttons based on active tab -->
+                    </div>
+                </div>
+
+                <!-- Content Area -->
+                <div id="content-area">
+                    <div class="text-center py-12 text-gray-500">Loading...</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Book Modal -->
+    <div id="modal-add-book" class="modal">
+        <div class="bg-white rounded-lg p-6 w-full max-w-md mx-4">
+            <h2 class="text-2xl font-bold mb-4">Add New Book</h2>
+            <form id="form-add-book" class="space-y-4">
+                <input type="text" name="title" placeholder="Book Title *" required 
+                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <input type="text" name="author" placeholder="Author *" required 
+                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <input type="text" name="isbn" placeholder="ISBN" 
+                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <input type="number" name="quantity" placeholder="Quantity" min="1" value="1" required 
+                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <div class="flex gap-3">
+                    <button type="submit" class="flex-1 bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700">Add Book</button>
+                    <button type="button" onclick="closeModal('modal-add-book')" class="flex-1 bg-gray-300 text-gray-700 py-2 rounded-lg hover:bg-gray-400">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Add User Modal -->
+    <div id="modal-add-user" class="modal">
+        <div class="bg-white rounded-lg p-6 w-full max-w-md mx-4">
+            <h2 class="text-2xl font-bold mb-4">Add New User</h2>
+            <form id="form-add-user" class="space-y-4">
+                <input type="text" name="name" placeholder="Full Name *" required 
+                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <input type="email" name="email" placeholder="Email *" required 
+                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <input type="tel" name="phone" placeholder="Phone" 
+                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <div class="flex gap-3">
+                    <button type="submit" class="flex-1 bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700">Add User</button>
+                    <button type="button" onclick="closeModal('modal-add-user')" class="flex-1 bg-gray-300 text-gray-700 py-2 rounded-lg hover:bg-gray-400">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Issue Book Modal -->
+    <div id="modal-issue-book" class="modal">
+        <div class="bg-white rounded-lg p-6 w-full max-w-md mx-4">
+            <h2 class="text-2xl font-bold mb-4">Issue Book</h2>
+            <form id="form-issue-book" class="space-y-4">
+                <select name="book_id" id="select-book" required 
+                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <option value="">Select Book</option>
+                </select>
+                <select name="user_id" id="select-user" required 
+                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <option value="">Select User</option>
+                </select>
+                <div class="flex gap-3">
+                    <button type="submit" class="flex-1 bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700">Issue Book</button>
+                    <button type="button" onclick="closeModal('modal-issue-book')" class="flex-1 bg-gray-300 text-gray-700 py-2 rounded-lg hover:bg-gray-400">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // FIXED: Simplified API URL - always use /api
+        const API_URL = '/api';
+        
+        let currentTab = 'books';
+        let allData = { books: [], users: [], transactions: [] };
+
+        // Initialize app
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('🚀 App starting...');
+            console.log('📡 API URL:', API_URL);
+            
+            // Check authentication
+            const authToken = localStorage.getItem('authToken');
+            const userName = localStorage.getItem('userName');
+            
+            if (!authToken) {
+                window.location.href = '/login';
+                return;
+            }
+            
+            // Display user name
+            document.getElementById('user-name').textContent = userName || 'User';
+            
+            loadAllData();
+            setupEventListeners();
+        });
+
+        function logout() {
+            localStorage.removeItem('authToken');
+            localStorage.removeItem('userName');
+            window.location.href = '/login';
+        }
+
+        function setupEventListeners() {
+            document.getElementById('form-add-book').addEventListener('submit', handleAddBook);
+            document.getElementById('form-add-user').addEventListener('submit', handleAddUser);
+            document.getElementById('form-issue-book').addEventListener('submit', handleIssueBook);
+            document.getElementById('search-input').addEventListener('input', handleSearch);
+        }
+
+        async function loadAllData() {
+            console.log('📥 Loading data...');
+            try {
+                const [books, users, transactions] = await Promise.all([
+                    fetch(`${API_URL}/books`).then(r => {
+                        console.log('Books response:', r.status);
+                        return r.json();
+                    }),
+                    fetch(`${API_URL}/users`).then(r => {
+                        console.log('Users response:', r.status);
+                        return r.json();
+                    }),
+                    fetch(`${API_URL}/transactions`).then(r => {
+                        console.log('Transactions response:', r.status);
+                        return r.json();
+                    })
+                ]);
+                
+                allData = { books, users, transactions };
+                console.log('✅ Data loaded:', allData);
+                updateCounts();
+                renderContent();
+            } catch (error) {
+                console.error('❌ Error loading data:', error);
+                document.getElementById('content-area').innerHTML = 
+                    `<div class="text-center py-12">
+                        <div class="text-red-500 text-xl mb-2">⚠️ Error connecting to server</div>
+                        <div class="text-gray-600">Make sure the Flask server is running at http://localhost:5000</div>
+                        <button onclick="loadAllData()" class="mt-4 bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700">
+                            🔄 Retry
+                        </button>
+                    </div>`;
+            }
+        }
+
+        function updateCounts() {
+            document.getElementById('books-count').textContent = allData.books.length;
+            document.getElementById('users-count').textContent = allData.users.length;
+            document.getElementById('transactions-count').textContent = allData.transactions.length;
+        }
+
+        function switchTab(tab) {
+            currentTab = tab;
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.className = 'tab-btn px-6 py-4 font-semibold text-gray-600';
+            });
+            document.getElementById(`tab-${tab}`).className = 'tab-btn px-6 py-4 font-semibold border-b-2 border-blue-500 text-blue-600';
+            
+            document.getElementById('search-input').value = '';
+            renderContent();
+        }
+
+        function renderContent() {
+            const actionButtons = document.getElementById('action-buttons');
+            const contentArea = document.getElementById('content-area');
+            const searchContainer = document.getElementById('search-container');
+
+            if (currentTab === 'books') {
+                searchContainer.style.display = 'block';
+                actionButtons.innerHTML = `
+                    <button onclick="openModal('modal-add-book')" class="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">
+                        ➕ Add Book
+                    </button>
+                    <a href="${API_URL}/export/books" class="flex items-center gap-2 bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700">
+                        📥 Export
+                    </a>
+                `;
+                contentArea.innerHTML = renderBooks(allData.books);
+            } else if (currentTab === 'users') {
+                searchContainer.style.display = 'block';
+                actionButtons.innerHTML = `
+                    <button onclick="openModal('modal-add-user')" class="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">
+                        ➕ Add User
+                    </button>
+                    <a href="${API_URL}/export/users" class="flex items-center gap-2 bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700">
+                        📥 Export
+                    </a>
+                `;
+                contentArea.innerHTML = renderUsers(allData.users);
+            } else if (currentTab === 'transactions') {
+                searchContainer.style.display = 'none';
+                actionButtons.innerHTML = `
+                    <button onclick="openIssueBookModal()" class="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">
+                        ➕ Issue Book
+                    </button>
+                    <a href="${API_URL}/export/transactions" class="flex items-center gap-2 bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700">
+                        📥 Export
+                    </a>
+                `;
+                contentArea.innerHTML = renderTransactions(allData.transactions);
+            }
+        }
+
+        function renderBooks(books) {
+            if (books.length === 0) {
+                return '<div class="text-center py-12 text-gray-500">No books found. Add your first book!</div>';
+            }
+            
+            return `<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                ${books.map(book => `
+                    <div class="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-lg p-4 shadow hover:shadow-md transition-shadow">
+                        <div class="flex justify-between items-start mb-3">
+                            <h3 class="font-bold text-lg text-gray-800 flex-1">${book.title}</h3>
+                            <button onclick="deleteBook(${book.id})" class="text-red-500 hover:text-red-700">❌</button>
+                        </div>
+                        <p class="text-gray-600 mb-2">by ${book.author}</p>
+                        <p class="text-sm text-gray-500 mb-3">ISBN: ${book.isbn || 'N/A'}</p>
+                        <div class="flex justify-between items-center pt-3 border-t border-gray-200">
+                            <span class="text-sm text-gray-600">Total: <span class="font-semibold">${book.quantity}</span></span>
+                            <span class="text-sm font-semibold ${book.available > 0 ? 'text-green-600' : 'text-red-600'}">
+                                Available: ${book.available}
+                            </span>
+                        </div>
+                    </div>
+                `).join('')}
+            </div>`;
+        }
+
+        function renderUsers(users) {
+            if (users.length === 0) {
+                return '<div class="text-center py-12 text-gray-500">No users found. Add your first user!</div>';
+            }
+            
+            return `<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                ${users.map(user => `
+                    <div class="bg-gradient-to-br from-purple-50 to-pink-50 rounded-lg p-4 shadow hover:shadow-md transition-shadow">
+                        <div class="flex justify-between items-start mb-3">
+                            <h3 class="font-bold text-lg text-gray-800">${user.name}</h3>
+                            <button onclick="deleteUser(${user.id})" class="text-red-500 hover:text-red-700">❌</button>
+                        </div>
+                        <p class="text-gray-600 text-sm mb-1">${user.email}</p>
+                        <p class="text-gray-600 text-sm mb-3">${user.phone || 'N/A'}</p>
+                        <div class="pt-3 border-t border-gray-200">
+                            <span class="text-sm text-gray-600">Books Issued: <span class="font-semibold text-blue-600">${user.books_issued}</span></span>
+                        </div>
+                    </div>
+                `).join('')}
+            </div>`;
+        }
+
+        function renderTransactions(transactions) {
+            if (transactions.length === 0) {
+                return '<div class="text-center py-12 text-gray-500">No transactions yet. Issue a book to get started!</div>';
+            }
+            
+            return `<div class="space-y-3">
+                ${transactions.map(trans => `
+                    <div class="bg-gray-50 rounded-lg p-4 flex justify-between items-center hover:bg-gray-100 transition-colors">
+                        <div class="flex-1">
+                            <div class="flex items-center gap-2 mb-1">
+                                <h4 class="font-semibold text-gray-800">${trans.book_title}</h4>
+                                <span class="text-xs ${trans.status === 'issued' ? 'bg-yellow-100 text-yellow-800' : 'bg-green-100 text-green-800'} px-2 py-1 rounded-full">
+                                    ${trans.status === 'issued' ? '🔄 Issued' : '✅ Returned'}
+                                </span>
+                            </div>
+                            <p class="text-sm text-gray-600">User: ${trans.user_name}</p>
+                            <p class="text-xs text-gray-500 mt-1">Issued: ${new Date(trans.issue_date).toLocaleString()}</p>
+                            ${trans.return_date ? `<p class="text-xs text-gray-500">Returned: ${new Date(trans.return_date).toLocaleString()}</p>` : ''}
+                        </div>
+                        ${trans.status === 'issued' ? `
+                            <button onclick="returnBook(${trans.id})" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 text-sm">
+                                Return Book
+                            </button>
+                        ` : ''}
+                    </div>
+                `).join('')}
+            </div>`;
+        }
+
+        function handleSearch() {
+            const searchTerm = document.getElementById('search-input').value.toLowerCase();
+            
+            if (currentTab === 'books') {
+                const filtered = allData.books.filter(book => 
+                    book.title.toLowerCase().includes(searchTerm) || 
+                    book.author.toLowerCase().includes(searchTerm)
+                );
+                document.getElementById('content-area').innerHTML = renderBooks(filtered);
+            } else if (currentTab === 'users') {
+                const filtered = allData.users.filter(user =>
+                    user.name.toLowerCase().includes(searchTerm) ||
+                    user.email.toLowerCase().includes(searchTerm)
+                );
+                document.getElementById('content-area').innerHTML = renderUsers(filtered);
+            }
+        }
+
+        async function handleAddBook(e) {
+            e.preventDefault();
+            const formData = new FormData(e.target);
+            const data = {
+                title: formData.get('title'),
+                author: formData.get('author'),
+                isbn: formData.get('isbn'),
+                quantity: parseInt(formData.get('quantity'))
+            };
+            
+            try {
+                const response = await fetch(`${API_URL}/books`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+                
+                if (response.ok) {
+                    closeModal('modal-add-book');
+                    e.target.reset();
+                    await loadAllData();
+                }
+            } catch (error) {
+                alert('Error adding book');
+            }
+        }
+
+        async function handleAddUser(e) {
+            e.preventDefault();
+            const formData = new FormData(e.target);
+            const data = {
+                name: formData.get('name'),
+                email: formData.get('email'),
+                phone: formData.get('phone')
+            };
+            
+            try {
+                const response = await fetch(`${API_URL}/users`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+                
+                if (response.ok) {
+                    closeModal('modal-add-user');
+                    e.target.reset();
+                    await loadAllData();
+                } else {
+                    const error = await response.json();
+                    alert(error.error || 'Error adding user');
+                }
+            } catch (error) {
+                alert('Error adding user');
+            }
+        }
+
+        async function openIssueBookModal() {
+            const selectBook = document.getElementById('select-book');
+            const selectUser = document.getElementById('select-user');
+            
+            selectBook.innerHTML = '<option value="">Select Book</option>' +
+                allData.books.filter(b => b.available > 0)
+                    .map(book => `<option value="${book.id}">${book.title} - Available: ${book.available}</option>`)
+                    .join('');
+            
+            selectUser.innerHTML = '<option value="">Select User</option>' +
+                allData.users.map(user => `<option value="${user.id}">${user.name}</option>`).join('');
+            
+            openModal('modal-issue-book');
+        }
+
+        async function handleIssueBook(e) {
+            e.preventDefault();
+            const formData = new FormData(e.target);
+            const data = {
+                book_id: parseInt(formData.get('book_id')),
+                user_id: parseInt(formData.get('user_id'))
+            };
+            
+            try {
+                const response = await fetch(`${API_URL}/transactions/issue`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+                
+                if (response.ok) {
+                    closeModal('modal-issue-book');
+                    e.target.reset();
+                    await loadAllData();
+                } else {
+                    const error = await response.json();
+                    alert(error.error || 'Error issuing book');
+                }
+            } catch (error) {
+                alert('Error issuing book');
+            }
+        }
+
+        async function deleteBook(id) {
+            if (!confirm('Are you sure you want to delete this book?')) return;
+            
+            try {
+                await fetch(`${API_URL}/books/${id}`, { method: 'DELETE' });
+                await loadAllData();
+            } catch (error) {
+                alert('Error deleting book');
+            }
+        }
+
+        async function deleteUser(id) {
+            if (!confirm('Are you sure you want to delete this user?')) return;
+            
+            try {
+                await fetch(`${API_URL}/users/${id}`, { method: 'DELETE' });
+                await loadAllData();
+            } catch (error) {
+                alert('Error deleting user');
+            }
+        }
+
+        async function returnBook(id) {
+            try {
+                await fetch(`${API_URL}/transactions/return/${id}`, { method: 'PUT' });
+                await loadAllData();
+            } catch (error) {
+                alert('Error returning book');
+            }
+        }
+
+        function openModal(modalId) {
+            document.getElementById(modalId).classList.add('active');
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).classList.remove('active');
+        }
+    </script>
+</body>
+</html>

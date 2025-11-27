@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Library Management - Login</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        .glass-effect {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+        }
+        .form-container {
+            transition: all 0.3s ease;
+        }
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex items-center justify-center p-4">
+    <div class="glass-effect rounded-2xl p-8 w-full max-w-md">
+        <!-- Header -->
+        <div class="text-center mb-8">
+            <div class="text-6xl mb-4">📚</div>
+            <h1 class="text-3xl font-bold text-gray-800 mb-2">Library Management</h1>
+            <p class="text-gray-600">Manage your library efficiently</p>
+        </div>
+
+        <!-- Login Form -->
+        <div id="login-form" class="form-container">
+            <h2 class="text-2xl font-bold text-gray-800 mb-6">Login</h2>
+            <form id="login-form-element" class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Email</label>
+                    <input type="email" id="login-email" required 
+                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+                        placeholder="Enter your email" value="admin@library.com">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Password</label>
+                    <input type="password" id="login-password" required 
+                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+                        placeholder="Enter your password" value="admin123">
+                </div>
+                <div id="login-error" class="text-red-500 text-sm hidden"></div>
+                <div id="login-debug" class="text-blue-500 text-xs"></div>
+                <button type="submit" 
+                    class="w-full bg-gradient-to-r from-purple-600 to-indigo-600 text-white py-3 rounded-lg font-semibold hover:from-purple-700 hover:to-indigo-700 transition-all">
+                    Login
+                </button>
+            </form>
+            <p class="text-center mt-6 text-gray-600">
+                Don't have an account? 
+                <button onclick="toggleForm()" class="text-purple-600 font-semibold hover:underline">Sign Up</button>
+            </p>
+        </div>
+
+        <!-- Signup Form -->
+        <div id="signup-form" class="form-container hidden">
+            <h2 class="text-2xl font-bold text-gray-800 mb-6">Create Account</h2>
+            <form id="signup-form-element" class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Full Name</label>
+                    <input type="text" id="signup-name" required 
+                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+                        placeholder="Enter your name">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Email</label>
+                    <input type="email" id="signup-email" required 
+                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+                        placeholder="Enter your email">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Password</label>
+                    <input type="password" id="signup-password" required minlength="6"
+                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+                        placeholder="Create a password (min 6 characters)">
+                </div>
+                <div id="signup-error" class="text-red-500 text-sm hidden"></div>
+                <button type="submit" 
+                    class="w-full bg-gradient-to-r from-purple-600 to-indigo-600 text-white py-3 rounded-lg font-semibold hover:from-purple-700 hover:to-indigo-700 transition-all">
+                    Sign Up
+                </button>
+            </form>
+            <p class="text-center mt-6 text-gray-600">
+                Already have an account? 
+                <button onclick="toggleForm()" class="text-purple-600 font-semibold hover:underline">Login</button>
+            </p>
+        </div>
+
+        <!-- Demo Credentials -->
+        <div class="mt-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
+            <p class="text-sm text-blue-800 font-semibold mb-2">🔑 Demo Credentials:</p>
+            <p class="text-sm text-blue-700">Email: admin@library.com</p>
+            <p class="text-sm text-blue-700">Password: admin123</p>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = '/api';
+        const debugDiv = document.getElementById('login-debug');
+
+        // Toggle between login and signup forms
+        function toggleForm() {
+            const loginForm = document.getElementById('login-form');
+            const signupForm = document.getElementById('signup-form');
+            
+            loginForm.classList.toggle('hidden');
+            signupForm.classList.toggle('hidden');
+            
+            // Clear errors
+            document.getElementById('login-error').classList.add('hidden');
+            document.getElementById('signup-error').classList.add('hidden');
+        }
+
+        // Handle Login
+        document.getElementById('login-form-element').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const email = document.getElementById('login-email').value;
+            const password = document.getElementById('login-password').value;
+            const errorDiv = document.getElementById('login-error');
+            
+            debugDiv.textContent = `Attempting login to: ${API_URL}/auth/login`;
+            console.log('🔐 Login attempt:', { email, api: `${API_URL}/auth/login` });
+            
+            try {
+                debugDiv.textContent = 'Sending request...';
+                const response = await fetch(`${API_URL}/auth/login`, {
+                    method: 'POST',
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify({ email, password })
+                });
+                
+                debugDiv.textContent = `Response status: ${response.status}`;
+                console.log('📡 Response:', response.status, response.statusText);
+                
+                const data = await response.json();
+                console.log('📦 Response data:', data);
+                
+                if (response.ok) {
+                    debugDiv.textContent = 'Login successful! Redirecting...';
+                    // Store auth token
+                    localStorage.setItem('authToken', data.token);
+                    localStorage.setItem('userName', data.name);
+                    
+                    // Redirect to main app
+                    setTimeout(() => {
+                        window.location.href = '/';
+                    }, 500);
+                } else {
+                    errorDiv.textContent = data.error || 'Invalid credentials';
+                    errorDiv.classList.remove('hidden');
+                    debugDiv.textContent = `Error: ${data.error || 'Unknown error'}`;
+                }
+            } catch (error) {
+                console.error('❌ Login error:', error);
+                errorDiv.textContent = 'Login failed. Please check if server is running.';
+                errorDiv.classList.remove('hidden');
+                debugDiv.textContent = `Network error: ${error.message}`;
+            }
+        });
+
+        // Handle Signup
+        document.getElementById('signup-form-element').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const name = document.getElementById('signup-name').value;
+            const email = document.getElementById('signup-email').value;
+            const password = document.getElementById('signup-password').value;
+            const errorDiv = document.getElementById('signup-error');
+            
+            try {
+                const response = await fetch(`${API_URL}/auth/signup`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name, email, password })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    // Store auth token
+                    localStorage.setItem('authToken', data.token);
+                    localStorage.setItem('userName', data.name);
+                    
+                    // Redirect to main app
+                    window.location.href = '/';
+                } else {
+                    errorDiv.textContent = data.error || 'Signup failed';
+                    errorDiv.classList.remove('hidden');
+                }
+            } catch (error) {
+                errorDiv.textContent = 'Signup failed. Please try again.';
+                errorDiv.classList.remove('hidden');
+            }
+        });
+
+        // Check if already logged in
+        if (localStorage.getItem('authToken')) {
+            debugDiv.textContent = 'Already logged in, redirecting...';
+            setTimeout(() => {
+                window.location.href = '/';
+            }, 1000);
+        }
+        
+        // Test API connection on page load
+        fetch(`${API_URL}/books`)
+            .then(r => {
+                console.log('✅ API connection test:', r.status);
+                debugDiv.textContent = `API Status: Connected (${r.status})`;
+            })
+            .catch(e => {
+                console.error('❌ API connection failed:', e);
+                debugDiv.textContent = '⚠️ Cannot connect to server!';
+            });
+    </script>
+</body>
+</html>
